@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_DB: fleetops
+      POSTGRES_USER: fleetops
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fleetops -d fleetops"]
+      interval: 3s
+      retries: 15
+
+  app:
+    build: .
+    image: fleetops-app:local
+    environment: &app_environment
+      APP_NAME: FleetOps
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: 'true'
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: fleetops
+      DB_USERNAME: fleetops
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  test:
+    profiles: [test]
+    image: fleetops-app:local
+    environment:
+      <<: *app_environment
+      APP_ENV: testing
+      DB_DATABASE: fleetops_test
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+    command: php artisan test
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
