@@ -130,6 +130,15 @@ body.dark .fleet-chart__bar { background: #b8c4ff; }
     font-size: 1.2rem;
 }
 
+.fleet-demo-label {
+    flex: 0 0 auto;
+    padding: .35rem .55rem;
+    border: 1px solid var(--fleet-line);
+    border-radius: .25rem;
+    color: var(--fleet-muted);
+    font-size: .75rem;
+}
+
 .fleet-page {
     padding: clamp(1rem, 2.5vw, 2rem);
 }
@@ -246,6 +255,7 @@ body.dark .fleet-login :focus-visible {
     .fleet-chart { gap: .25rem; }
     .fleet-chart__month span:last-child { font-size: .65rem; }
     .fleet-topbar { min-height: 60px; }
+    .fleet-topbar h1 { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

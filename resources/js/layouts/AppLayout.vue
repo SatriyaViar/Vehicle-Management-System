@@ -28,6 +28,7 @@
             <header class="fleet-topbar">
                 <button class="btn btn-light min-action d-lg-none" type="button" :aria-expanded="menuOpen" aria-label="Buka menu" @click="menuOpen = !menuOpen">Menu</button>
                 <h1 class="flex-grow-1">{{ route.meta.title }}</h1>
+                <span class="fleet-demo-label">Data demo</span>
                 <button class="btn btn-outline-primary min-action" type="button" :aria-pressed="dark" @click="toggleTheme">
                     {{ dark ? 'Mode terang' : 'Mode gelap' }}
                 </button>

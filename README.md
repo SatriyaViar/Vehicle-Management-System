@@ -66,6 +66,8 @@ Semua akun demo memakai kata sandi `demo12345`.
 | Penyetuju level 1 | `manager@fleetops.test` |
 | Penyetuju level 2 | `head@fleetops.test` |
 
+Lokasi, kendaraan, driver, pegawai pemakai, dan nama pada seeder adalah data contoh untuk demo, bukan data perusahaan sungguhan.
+
 ## Cara demo
 
 1. Login sebagai admin, buat pemesanan atas nama pegawai, lalu pilih kendaraan, driver, jadwal, dan dua approver yang berbeda.
