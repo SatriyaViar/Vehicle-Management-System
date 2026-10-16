@@ -6,42 +6,36 @@
             <p class="fleet-muted mb-0">Periode berdasarkan tanggal pembuatan booking (WIB).</p>
         </div>
 
-        <form class="card fleet-card mb-3" @submit.prevent="applyFilters" novalidate>
-            <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label" for="report-from">Dari tanggal</label>
-                        <input id="report-from" v-model="filters.from" class="form-control" type="date" :max="filters.to || today" required>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label" for="report-to">Sampai tanggal</label>
-                        <input id="report-to" v-model="filters.to" class="form-control" type="date" :min="filters.from" :max="today" required>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label" for="report-status">Status</label>
-                        <select id="report-status" v-model="filters.status" class="form-select">
-                            <option value="">Semua status</option>
-                            <option value="pending">Menunggu</option>
-                            <option value="approved">Disetujui</option>
-                            <option value="rejected">Ditolak</option>
-                            <option value="completed">Selesai</option>
-                        </select>
-                    </div>
-                    <div class="col-12 d-flex flex-wrap justify-content-end gap-2">
-                        <button class="btn btn-primary min-action" type="submit" :disabled="loading">{{ loading ? 'Memuat…' : 'Terapkan filter' }}</button>
-                        <a v-if="applied" class="btn btn-outline-primary min-action" :href="exportUrl">Ekspor Excel</a>
-                    </div>
-                </div>
-            </div>
-        </form>
+        <BookingFilters
+            :value="appliedFilters"
+            :options="filterOptions"
+            :options-loading="optionsLoading"
+            :options-error="optionsError"
+            :loading="loading"
+            @apply="applyFilters"
+            @reset="resetFilters"
+            @retry-options="loadFilterOptions"
+        />
 
-        <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+            <button v-if="applied && !error" class="btn btn-outline-primary min-action" type="button" :disabled="loading || exporting" @click="exportReport">
+                {{ exporting ? 'Menyiapkan Excel…' : 'Ekspor Excel' }}
+            </button>
+        </div>
+
+        <p v-if="exportError" class="alert alert-danger" role="alert">{{ exportError }}</p>
+        <div v-if="error" class="alert alert-danger" role="alert">
+            {{ error }} <button class="btn btn-sm btn-outline-danger min-action ms-2" type="button" @click="load">Coba lagi</button>
+        </div>
         <p v-else-if="loading" role="status">Memuat laporan…</p>
         <section v-else-if="!bookings.length" class="card fleet-card">
             <div class="card-body py-5 text-center">
-                <h3 class="h5">Tidak ada pemesanan pada periode ini</h3>
-                <p class="fleet-muted mb-3">Ubah rentang tanggal atau status untuk melihat hasil lain.</p>
-                <router-link class="btn btn-outline-primary min-action" to="/bookings/create">Buat pemesanan</router-link>
+                <h3 class="h5">{{ hasCustomFilters ? 'Tidak ada hasil sesuai filter' : 'Tidak ada pemesanan pada periode ini' }}</h3>
+                <p class="fleet-muted mb-3">{{ hasCustomFilters ? 'Ubah filter atau kembali ke rentang bulan ini.' : 'Pilih rentang tanggal lain atau buat pemesanan.' }}</p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <button v-if="hasCustomFilters" class="btn btn-outline-primary min-action" type="button" @click="resetFilters">Reset filter</button>
+                    <router-link class="btn btn-outline-primary min-action" to="/bookings/create">Buat pemesanan</router-link>
+                </div>
             </div>
         </section>
         <section v-else class="card fleet-card">
@@ -80,8 +74,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../bootstrap';
+import BookingFilters from '../components/BookingFilters.vue';
+import { readBookingFilters, toBookingQuery } from '../booking-filters';
 
 function wibDate(value) {
     const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value);
@@ -90,29 +87,100 @@ function wibDate(value) {
 }
 
 const today = wibDate(new Date());
-const filters = reactive({ from: `${today.slice(0, 7)}-01`, to: today, status: '' });
+const defaults = { from: `${today.slice(0, 7)}-01`, to: today };
+const route = useRoute();
+const router = useRouter();
 const applied = ref(null);
 const bookings = ref([]);
 const loading = ref(false);
 const error = ref('');
-const exportUrl = computed(() => `/api/reports/bookings/export?${new URLSearchParams(applied.value ?? {}).toString()}`);
+const exporting = ref(false);
+const exportError = ref('');
+const filterOptions = ref({ vehicles: [], drivers: [], approvers: [] });
+const optionsLoading = ref(true);
+const optionsError = ref('');
+const appliedFilters = computed(() => readBookingFilters(route.query, defaults));
+const hasCustomFilters = computed(() => ['search', 'status', 'vehicle_id', 'driver_id', 'approver_id']
+    .some((key) => Boolean(appliedFilters.value[key]))
+    || appliedFilters.value.from !== defaults.from
+    || appliedFilters.value.to !== defaults.to);
+let loadRequest = 0;
 
-async function applyFilters() {
+async function load() {
     error.value = '';
-    if (!filters.from || !filters.to || filters.from > filters.to) {
-        error.value = 'Pilih rentang tanggal yang valid.';
+    loading.value = true;
+    applied.value = null;
+    bookings.value = [];
+    const request = ++loadRequest;
+    const filters = appliedFilters.value;
+    try {
+        const response = await api.get('/api/bookings', { params: filters });
+        if (request === loadRequest) {
+            bookings.value = response.data.data;
+            applied.value = filters;
+        }
+    } catch (requestError) {
+        if (request === loadRequest) {
+            error.value = requestError.response?.status === 422
+                ? 'Filter tanggal tidak valid. Isi rentang tanggal yang lengkap dan berurutan.'
+                : 'Laporan tidak dapat dimuat.';
+        }
+    } finally {
+        if (request === loadRequest) loading.value = false;
+    }
+}
+
+async function loadFilterOptions() {
+    optionsLoading.value = true;
+    optionsError.value = '';
+    try {
+        filterOptions.value = await api.get('/api/booking-filter-options').then(({ data }) => data);
+    } catch {
+        optionsError.value = 'Pilihan kendaraan, driver, dan penyetuju tidak dapat dimuat.';
+    } finally {
+        optionsLoading.value = false;
+    }
+}
+
+async function applyFilters(filters) {
+    const query = toBookingQuery(filters);
+    if (!route.query.detail && JSON.stringify(route.query) === JSON.stringify(query)) {
+        await load();
         return;
     }
+    await router.push({ query });
+}
 
-    loading.value = true;
-    applied.value = { ...filters };
+async function resetFilters() {
+    const query = { ...defaults };
+    if (!route.query.detail && JSON.stringify(route.query) === JSON.stringify(query)) {
+        await load();
+        return;
+    }
+    await router.push({ query });
+}
+
+async function exportReport() {
+    if (!applied.value || loading.value || exporting.value) return;
+    exporting.value = true;
+    exportError.value = '';
     try {
-        bookings.value = (await api.get('/api/bookings', { params: applied.value })).data.data;
+        const { data } = await api.get('/api/reports/bookings/export', {
+            params: applied.value,
+            responseType: 'blob',
+        });
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'booking-report.xlsx';
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch {
-        error.value = 'Laporan tidak dapat dimuat.';
-        bookings.value = [];
+        exportError.value = 'File Excel tidak dapat diunduh. Coba lagi.';
     } finally {
-        loading.value = false;
+        exporting.value = false;
     }
 }
 
@@ -132,7 +200,13 @@ function approvalSummary(booking) {
     return booking.approvals.map((approval) => `L${approval.level} ${statusLabel(approval.status)}`).join(' · ');
 }
 
-onMounted(applyFilters);
+watch(() => JSON.stringify(appliedFilters.value), load, { immediate: true });
+onMounted(() => {
+    loadFilterOptions();
+    if (!Object.hasOwn(route.query, 'from') && !Object.hasOwn(route.query, 'to')) {
+        router.replace({ query: { ...route.query, ...defaults } });
+    }
+});
 </script>
 
 <style scoped>

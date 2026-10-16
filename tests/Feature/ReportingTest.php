@@ -93,6 +93,51 @@ class ReportingTest extends TestCase
         unlink($path);
     }
 
+    public function test_export_matches_booking_list_for_full_filter_set(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-16T12:00:00+07:00'));
+        [$admin, $vehicleId, $driverId] = $this->reportFixture();
+        $firstApprover = User::create(['name' => 'First', 'email' => 'first@example.test', 'password' => 'secret', 'role' => 'approver']);
+        $secondApprover = User::create(['name' => 'Second', 'email' => 'second@example.test', 'password' => 'secret', 'role' => 'approver']);
+        $otherLocation = Location::create(['name' => 'Other Site', 'region' => 'Sulawesi', 'type' => 'mine']);
+        $otherVehicle = Vehicle::create(['plate_number' => 'B 2002 AA', 'type' => 'goods', 'ownership' => 'rental', 'location_id' => $otherLocation->id]);
+        $otherDriver = Driver::create(['name' => 'Andi']);
+
+        $base = [
+            'created_by' => $admin->id, 'requester_name' => 'Employee', 'purpose' => 'Inspection',
+            'start_at' => '2026-10-20 01:00:00+00', 'end_at' => '2026-10-20 10:00:00+00',
+            'status' => 'approved', 'completed_at' => null, 'created_at' => now(), 'updated_at' => now(),
+        ];
+        $targetId = DB::table('bookings')->insertGetId($base + [
+            'code' => 'BK-FILTER-TARGET', 'vehicle_id' => $vehicleId, 'driver_id' => $driverId, 'destination' => 'Mine Target',
+        ]);
+        $otherId = DB::table('bookings')->insertGetId($base + [
+            'code' => 'BK-FILTER-OTHER', 'vehicle_id' => $otherVehicle->id, 'driver_id' => $otherDriver->id, 'destination' => 'Mine Other',
+        ]);
+        foreach ([[$targetId, $firstApprover->id], [$otherId, $secondApprover->id]] as [$bookingId, $approverId]) {
+            DB::table('booking_approvals')->insert([
+                'booking_id' => $bookingId, 'approver_id' => $approverId, 'level' => 1, 'status' => 'pending',
+                'decided_at' => null, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $filters = http_build_query([
+            'search' => 'mine', 'status' => 'approved', 'from' => '2026-10-16', 'to' => '2026-10-16',
+            'vehicle_id' => $vehicleId, 'driver_id' => $driverId, 'approver_id' => $firstApprover->id,
+        ]);
+        $this->actingAs($admin)->getJson('/api/bookings?'.$filters)
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $targetId);
+        $response = $this->get('/api/reports/bookings/export?'.$filters)->assertOk()->assertDownload('booking-report.xlsx');
+
+        $path = tempnam(sys_get_temp_dir(), 'fleetops-full-filter-');
+        file_put_contents($path, $response->streamedContent());
+        $spreadsheet = IOFactory::load($path);
+        $codes = array_column($spreadsheet->getActiveSheet()->toArray(null, true, true, false), 0);
+        $this->assertSame(['Booking Code', 'BK-FILTER-TARGET'], $codes);
+        $spreadsheet->disconnectWorksheets();
+        unlink($path);
+    }
+
     public function test_report_export_is_admin_only(): void
     {
         $approver = User::create(['name' => 'Manager', 'email' => 'manager@example.test', 'password' => 'secret', 'role' => 'approver']);

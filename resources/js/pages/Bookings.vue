@@ -8,14 +8,26 @@
             <router-link v-if="auth.user?.role === 'admin'" class="btn btn-primary min-action" to="/bookings/create">Pesan kendaraan</router-link>
         </div>
 
+        <BookingFilters
+            :value="appliedFilters"
+            :options="filterOptions"
+            :options-loading="optionsLoading"
+            :options-error="optionsError"
+            :loading="loading"
+            @apply="applyFilters"
+            @reset="resetFilters"
+            @retry-options="loadFilterOptions"
+        />
+
         <p v-if="loading" role="status">Memuat pemesanan…</p>
         <div v-else-if="error" class="alert alert-danger" role="alert">
             {{ error }} <button class="btn btn-sm btn-outline-danger ms-2" type="button" @click="load">Coba lagi</button>
         </div>
         <section v-else-if="!bookings.length" class="card fleet-card">
             <div class="card-body py-5 text-center">
-                <h3 class="h5">Belum ada pemesanan</h3>
-                <p class="fleet-muted mb-0">Pemesanan baru akan muncul di sini.</p>
+                <h3 class="h5">{{ hasFilters ? 'Tidak ada hasil sesuai filter' : 'Belum ada pemesanan' }}</h3>
+                <p class="fleet-muted mb-3">{{ hasFilters ? 'Ubah filter atau tampilkan semua pemesanan.' : 'Pemesanan baru akan muncul di sini.' }}</p>
+                <button v-if="hasFilters" class="btn btn-outline-primary min-action" type="button" @click="resetFilters">Reset filter</button>
             </div>
         </section>
         <section v-else class="card fleet-card">
@@ -58,24 +70,67 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../bootstrap';
 import { auth } from '../auth';
+import BookingFilters from '../components/BookingFilters.vue';
+import { readBookingFilters, toBookingQuery } from '../booking-filters';
 
+const route = useRoute();
+const router = useRouter();
 const bookings = ref([]);
 const loading = ref(true);
 const error = ref('');
+const filterOptions = ref({ vehicles: [], drivers: [], approvers: [] });
+const optionsLoading = ref(true);
+const optionsError = ref('');
+const appliedFilters = computed(() => readBookingFilters(route.query));
+const hasFilters = computed(() => Object.keys(appliedFilters.value).length > 0);
+let loadRequest = 0;
 
 async function load() {
+    const request = ++loadRequest;
     loading.value = true;
     error.value = '';
+    bookings.value = [];
     try {
-        bookings.value = (await api.get('/api/bookings')).data.data;
+        const response = await api.get('/api/bookings', { params: appliedFilters.value });
+        if (request === loadRequest) bookings.value = response.data.data;
     } catch {
-        error.value = 'Daftar pemesanan tidak dapat dimuat.';
+        if (request === loadRequest) error.value = 'Daftar pemesanan tidak dapat dimuat.';
     } finally {
-        loading.value = false;
+        if (request === loadRequest) loading.value = false;
     }
+}
+
+async function loadFilterOptions() {
+    optionsLoading.value = true;
+    optionsError.value = '';
+    try {
+        filterOptions.value = await api.get('/api/booking-filter-options').then(({ data }) => data);
+    } catch {
+        optionsError.value = 'Pilihan kendaraan, driver, dan penyetuju tidak dapat dimuat.';
+    } finally {
+        optionsLoading.value = false;
+    }
+}
+
+async function applyFilters(filters) {
+    const query = toBookingQuery(filters);
+    if (JSON.stringify(route.query) === JSON.stringify(query)) {
+        await load();
+        return;
+    }
+    await router.push({ query });
+}
+
+async function resetFilters() {
+    if (!Object.keys(route.query).length) {
+        await load();
+        return;
+    }
+    await router.push({ query: {} });
 }
 
 function formatSchedule(booking) {
@@ -97,7 +152,8 @@ function statusLabel(status) {
     return ({ pending: 'Menunggu', approved: 'Disetujui', rejected: 'Ditolak', completed: 'Selesai' })[status] ?? status;
 }
 
-onMounted(load);
+watch(() => JSON.stringify(appliedFilters.value), load, { immediate: true });
+onMounted(loadFilterOptions);
 </script>
 
 <style scoped>

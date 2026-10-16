@@ -6,6 +6,7 @@ use App\Models\Driver;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vehicle;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -98,8 +99,69 @@ class BookingTest extends TestCase
         $bookingId = $this->actingAs($this->admin)->postJson('/api/bookings', $this->data())->assertCreated()->json('data.id');
         $outsider = User::create(['name' => 'Other', 'email' => 'other@example.test', 'password' => 'secret', 'role' => 'approver']);
         $this->actingAs($outsider)->getJson('/api/bookings')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/bookings?approver_id='.$this->first->id)->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/bookings?approver_id='.$outsider->id)->assertOk()->assertJsonCount(0, 'data');
         $this->getJson('/api/bookings/'.$bookingId)->assertForbidden();
         $this->actingAs($this->second)->getJson('/api/bookings/'.$bookingId)->assertOk();
+    }
+
+    public function test_booking_filters_combine_and_search_wildcards_literally(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-16T12:00:00+07:00'));
+        $third = User::create(['name' => 'Third', 'email' => 'third@example.test', 'password' => 'secret', 'role' => 'approver']);
+        $targetId = $this->actingAs($this->admin)->postJson('/api/bookings', array_merge($this->data(), [
+            'requester_name' => 'Unit%31', 'destination' => 'Mine target',
+            'start_at' => '2026-10-20T08:00', 'end_at' => '2026-10-20T09:00',
+        ]))->assertCreated()->json('data.id');
+        $otherId = $this->postJson('/api/bookings', array_merge($this->data(), [
+            'requester_name' => 'UnitX31', 'destination' => 'Mine distractor',
+            'vehicle_id' => $this->otherVehicle->id, 'driver_id' => $this->otherDriver->id,
+            'approver_1_id' => $this->second->id, 'approver_2_id' => $third->id,
+            'start_at' => '2026-10-21T08:00', 'end_at' => '2026-10-21T09:00',
+        ]))->assertCreated()->json('data.id');
+        $underscoreId = $this->postJson('/api/bookings', array_merge($this->data(), [
+            'requester_name' => 'Unit_31', 'destination' => 'Archive underscore',
+            'start_at' => '2026-10-22T08:00', 'end_at' => '2026-10-22T09:00',
+        ]))->assertCreated()->json('data.id');
+
+        $filters = http_build_query([
+            'search' => 'mine', 'status' => 'pending', 'from' => '2026-10-16', 'to' => '2026-10-16',
+            'vehicle_id' => $this->vehicle->id, 'driver_id' => $this->driver->id, 'approver_id' => $this->first->id,
+        ]);
+        $this->getJson('/api/bookings?'.$filters)
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $targetId);
+
+        $this->getJson('/api/bookings?'.http_build_query(['search' => 'Unit%31']))
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $targetId);
+        $this->getJson('/api/bookings?'.http_build_query(['search' => 'Unit_31']))
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $underscoreId);
+
+        foreach ([
+            ['vehicle_id' => 999999],
+            ['driver_id' => 'not-an-id'],
+            ['approver_id' => $this->admin->id],
+            ['status' => 'unknown'],
+            ['from' => 'not-a-date'],
+            ['search' => str_repeat('x', 121)],
+        ] as $invalidFilter) {
+            $this->getJson('/api/bookings?'.http_build_query($invalidFilter))->assertUnprocessable();
+        }
+
+        $this->assertNotSame($targetId, $otherId);
+    }
+
+    public function test_booking_filter_options_require_authentication_and_return_only_labels(): void
+    {
+        $this->getJson('/api/booking-filter-options')->assertUnauthorized();
+
+        $payload = $this->actingAs($this->admin)->getJson('/api/booking-filter-options')->assertOk()->json();
+
+        $this->assertSame(['id', 'plate_number'], array_keys($payload['vehicles'][0]));
+        $this->assertSame(['id', 'name'], array_keys($payload['drivers'][0]));
+        $this->assertSame(['id', 'name'], array_keys($payload['approvers'][0]));
+        $this->assertCount(2, $payload['vehicles']);
+        $this->assertCount(2, $payload['drivers']);
+        $this->assertCount(2, $payload['approvers']);
     }
 
     public function test_edit_before_first_decision(): void

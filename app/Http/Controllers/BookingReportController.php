@@ -16,7 +16,7 @@ class BookingReportController extends Controller
         abort_unless($request->user()->role === 'admin', 403);
         $filters = $request->validated();
         $bookings = Booking::with(['vehicle', 'driver', 'approvals.approver'])
-            ->filtered($filters['from'] ?? null, $filters['to'] ?? null, $filters['status'] ?? null)
+            ->filtered($filters)
             ->latest()->get();
         $rows = [[
             'Booking Code', 'Requester', 'Vehicle', 'Driver', 'Destination', 'Start (WIB)', 'End (WIB)',

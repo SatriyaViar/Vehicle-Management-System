@@ -21,6 +21,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/api/me', fn (Request $request) => $request->user()->only('id', 'name', 'email', 'role'));
+    Route::get('/api/booking-filter-options', [BookingController::class, 'filterOptions']);
     Route::get('/api/dashboard', DashboardController::class)->middleware('can:admin');
     Route::get('/api/reports/bookings/export', [BookingReportController::class, 'export']);
     Route::get('/api/booking-options', fn () => [
