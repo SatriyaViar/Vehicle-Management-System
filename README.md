@@ -101,4 +101,4 @@ Pemeriksaan bentrok dilakukan di aplikasi saat booking dibuat/diubah dan saat le
 
 ## Atribusi
 
-Layout dan stylesheet diadaptasi dari [Hope UI Vue Dashboard](https://github.com/iqonicdesignofficial/hope-ui-vue-dashboard) oleh Iqonic Design. Proyek template tersebut menyebut lisensi MIT pada README-nya. FleetOps memakai Vue/Vite dari Laravel dan tidak membawa seluruh halaman demo template.
+Layout, stylesheet, dan ikon outline diadaptasi dari [Hope UI Vue Dashboard](https://github.com/iqonicdesignofficial/hope-ui-vue-dashboard) oleh Iqonic Design. Proyek template tersebut menyebut lisensi MIT pada README-nya. FleetOps memakai Vue/Vite dari Laravel dan tidak membawa seluruh halaman demo template.

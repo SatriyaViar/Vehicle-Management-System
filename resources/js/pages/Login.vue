@@ -1,32 +1,46 @@
 <template>
     <main class="fleet-login">
-        <button class="btn btn-outline-primary min-action fleet-login-theme" type="button" :aria-pressed="dark" @click="toggleTheme">
-            {{ dark ? 'Mode terang' : 'Mode gelap' }}
-        </button>
-        <section class="card fleet-card fleet-login__card">
-            <div class="card-body p-4 p-md-5">
-                <p class="text-primary fw-semibold mb-1">FleetOps</p>
-                <h1 class="h3 mb-2">Masuk ke aplikasi</h1>
-                <p class="fleet-muted mb-4">Gunakan akun demo admin atau penyetuju.</p>
+        <div class="fleet-login__layout">
+            <section class="fleet-login__brand" aria-label="Tentang FleetOps">
+                <div>
+                    <p class="fleet-login__brand-label fw-semibold mb-2">FLEETOPS</p>
+                    <h1 class="mb-0">Pool kendaraan</h1>
+                </div>
+                <div>
+                    <p>Atur pemesanan, persetujuan, dan penyelesaian perjalanan dalam satu alur.</p>
+                    <span class="small">Portal admin pool dan penyetuju</span>
+                </div>
+            </section>
 
-                <form @submit.prevent="submit" novalidate>
-                    <div class="mb-3">
-                        <label class="form-label" for="email">Email</label>
-                        <input id="email" v-model.trim="form.email" class="form-control" type="email" name="email" autocomplete="username" required :aria-invalid="Boolean(errors.email)" :aria-describedby="errors.email ? 'email-error' : undefined">
-                        <p v-if="errors.email" id="email-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.email }}</p>
+            <section class="card fleet-card fleet-login__form" aria-labelledby="login-title">
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-4">
+                        <button class="btn btn-outline-primary min-action fleet-login__theme" type="button" :aria-pressed="dark" @click="toggleTheme">
+                            {{ dark ? 'Mode terang' : 'Mode gelap' }}
+                        </button>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label" for="password">Kata sandi</label>
-                        <input id="password" v-model="form.password" class="form-control" type="password" name="password" autocomplete="current-password" required :aria-invalid="Boolean(errors.password)" :aria-describedby="errors.password ? 'password-error' : undefined">
-                        <p v-if="errors.password" id="password-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.password }}</p>
-                    </div>
-                    <p v-if="error" id="login-error" ref="errorSummary" class="fleet-error" role="alert" tabindex="-1">{{ error }}</p>
-                    <button class="btn btn-primary w-100 min-action" type="submit" :disabled="loading" :aria-busy="loading">
-                        {{ loading ? 'Memeriksa akun…' : 'Masuk' }}
-                    </button>
-                </form>
-            </div>
-        </section>
+                    <h2 id="login-title" class="h3 mb-2">Masuk ke FleetOps</h2>
+                    <p class="fleet-muted mb-4">Gunakan akun demo admin atau penyetuju.</p>
+
+                    <form @submit.prevent="submit" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Email</label>
+                            <input id="email" v-model.trim="form.email" class="form-control" type="email" name="email" autocomplete="username" required :aria-invalid="Boolean(errors.email)" :aria-describedby="errors.email ? 'email-error' : undefined">
+                            <p v-if="errors.email" id="email-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.email }}</p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="password">Kata sandi</label>
+                            <input id="password" v-model="form.password" class="form-control" type="password" name="password" autocomplete="current-password" required :aria-invalid="Boolean(errors.password)" :aria-describedby="errors.password ? 'password-error' : undefined">
+                            <p v-if="errors.password" id="password-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.password }}</p>
+                        </div>
+                        <p v-if="error" id="login-error" ref="errorSummary" class="fleet-error" role="alert" tabindex="-1">{{ error }}</p>
+                        <button class="btn btn-primary w-100 min-action" type="submit" :disabled="loading" :aria-busy="loading">
+                            {{ loading ? 'Memeriksa akun…' : 'Masuk' }}
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
     </main>
 </template>
 

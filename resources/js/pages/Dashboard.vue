@@ -1,9 +1,11 @@
 <template>
     <div>
-        <div class="mb-4">
-            <p class="fleet-muted mb-1">Ringkasan armada dan pemesanan</p>
-            <h2 class="h4 mb-0">Aktivitas kendaraan</h2>
-        </div>
+        <header class="fleet-page-heading mb-4">
+            <div>
+                <p class="fleet-muted mb-1">Ringkasan armada dan pemesanan</p>
+                <h1>Aktivitas kendaraan</h1>
+            </div>
+        </header>
 
         <p v-if="loading" role="status">Memuat ringkasan…</p>
         <div v-else-if="error" class="alert alert-danger" role="alert">

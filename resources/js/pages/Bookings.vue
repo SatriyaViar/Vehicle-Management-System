@@ -1,12 +1,12 @@
 <template>
     <div>
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <header class="fleet-page-heading mb-4">
             <div>
                 <p class="fleet-muted mb-1">Pemesanan kendaraan</p>
-                <h2 class="h4 mb-0">Daftar pemesanan</h2>
+                <h1>Daftar pemesanan</h1>
             </div>
             <router-link v-if="auth.user?.role === 'admin'" class="btn btn-primary min-action" to="/bookings/create">Pesan kendaraan</router-link>
-        </div>
+        </header>
 
         <BookingFilters
             :value="appliedFilters"

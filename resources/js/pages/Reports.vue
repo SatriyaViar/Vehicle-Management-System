@@ -1,10 +1,12 @@
 <template>
     <div>
-        <div class="mb-4">
-            <p class="fleet-muted mb-1">Pemesanan kendaraan</p>
-            <h2 class="h4 mb-1">Laporan pemesanan</h2>
-            <p class="fleet-muted mb-0">Periode berdasarkan tanggal pembuatan booking (WIB).</p>
-        </div>
+        <header class="fleet-page-heading mb-4">
+            <div>
+                <p class="fleet-muted mb-1">Pemesanan kendaraan</p>
+                <h1 class="mb-1">Laporan pemesanan</h1>
+                <p class="fleet-muted mb-0">Periode berdasarkan tanggal pembuatan booking (WIB).</p>
+            </div>
+        </header>
 
         <BookingFilters
             :value="appliedFilters"

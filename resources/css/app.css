@@ -1,7 +1,7 @@
 @import './hope-ui-vendors.css';
 @import './hope-ui.css';
 
-/* Hope UI light-shell palette; dense spacing keeps booking data scannable. */
+/* Hope UI's cobalt marks active routes and primary actions; neutral surfaces keep booking data legible. */
 :root {
     --fleet-sidebar-width: 260px;
     --fleet-ink: #303b50;
@@ -31,16 +31,149 @@ body.dark {
 }
 
 body .text-muted { color: var(--fleet-muted) !important; }
-.fleet-sidebar .nav-link:not(.active) { color: var(--fleet-ink); }
 .form-control::placeholder { color: #596579; opacity: 1; }
 body.dark .form-control::placeholder { color: #b2bac9; }
-body.dark .fleet-card { background: var(--fleet-surface); }
-body.dark .fleet-brand,
-body.dark .fleet-sidebar .nav-link:not(.active),
-body.dark .fleet-sidebar .mt-4 > span,
+
+.fleet-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    display: flex;
+    width: var(--fleet-sidebar-width);
+    flex-direction: column;
+    overflow-y: auto;
+    color: var(--fleet-ink);
+    background: var(--fleet-surface);
+    transition: none;
+}
+
+.fleet-sidebar .sidebar-header {
+    min-height: 76px;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid var(--fleet-line);
+}
+
+.fleet-sidebar .navbar-brand.fleet-brand {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    color: var(--fleet-ink);
+    line-height: 1.25;
+}
+
+.fleet-brand__name { font-size: 1.25rem; font-weight: 700; }
+.fleet-brand__caption { color: var(--fleet-muted); font-size: .75rem; font-weight: 400; }
+.fleet-sidebar .sidebar-body { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: visible; padding: .75rem 1rem 1rem; }
+.fleet-sidebar .sidebar-list { flex: 1; }
+.fleet-sidebar .nav-item { margin: .25rem 0; }
+.fleet-sidebar .nav-item .nav-link { min-height: 48px; gap: .75rem; }
+.fleet-nav-icon { width: 20px; min-width: 20px; height: 20px; }
+.fleet-nav-icon svg { display: block; width: 20px; height: 20px; }
+
+.fleet-sidebar__account {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: .75rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--fleet-line);
+}
+
+.fleet-account-avatar {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--bs-primary-shade-60);
+    background: var(--bs-primary-tint-90);
+    font-weight: 600;
+}
+
+.fleet-account-copy { min-width: 0; }
+.fleet-signout { grid-column: 1 / -1; justify-content: flex-start; padding-left: 0; }
+.fleet-sidebar .nav-link:not(.active) { color: var(--fleet-ink); }
+.min-action { min-width: 44px; min-height: 44px; }
+
+.form-control,
+.form-select {
+    min-height: 44px;
+    --bs-border-color: #697689;
+    border-color: #697689;
+}
+
+body.dark .form-control,
+body.dark .form-select { --bs-border-color: #9ca7bb; border-color: #9ca7bb; }
+
+.main-content {
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: var(--fleet-sidebar-width);
+}
+
+.main-content .fleet-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    min-height: 72px;
+    margin: 1rem 1rem 0;
+    padding: .25rem 0;
+    border: 1px solid var(--fleet-line);
+    border-radius: .5rem;
+    background: var(--fleet-surface);
+}
+
+.fleet-navbar .navbar-inner { gap: .75rem; }
+.fleet-navbar__title { color: var(--fleet-ink); font-size: .95rem; font-weight: 600; }
+.fleet-menu-trigger, .fleet-sidebar__close { color: var(--fleet-ink); border-color: #697689; }
+body.dark .fleet-menu-trigger, body.dark .fleet-sidebar__close { color: var(--fleet-ink); border-color: #9ca7bb; }
+
+.fleet-demo-label {
+    flex: 0 0 auto;
+    padding: .35rem .55rem;
+    border: 1px solid var(--fleet-line);
+    border-radius: .25rem;
+    color: var(--fleet-muted);
+    font-size: .75rem;
+}
+
+.content-inner.fleet-page {
+    min-height: calc(100vh - 6.6rem);
+    margin-top: 0 !important;
+    padding: 1.5rem;
+}
+
+.fleet-page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.fleet-page-heading h1 { margin: 0; color: var(--fleet-ink); font-size: clamp(1.35rem, 2vw, 1.6rem); font-weight: 600; }
+.fleet-page h2, .fleet-page h3, .fleet-page h4, .fleet-page h5, .fleet-page h6 { color: var(--fleet-ink); }
+
+.fleet-card {
+    color: var(--fleet-ink);
+    background: var(--fleet-surface);
+    border-color: var(--fleet-line);
+}
+
+.fleet-muted { color: var(--fleet-muted); }
+
+body.dark .fleet-sidebar .navbar-brand,
+body.dark .fleet-sidebar .fleet-account-copy,
+body.dark .fleet-navbar__title,
+body.dark .fleet-page h1,
+body.dark .fleet-page h2,
+body.dark .fleet-page h3,
+body.dark .fleet-page h4,
+body.dark .fleet-page h5,
+body.dark .fleet-page h6,
+body.dark .fleet-card .h2 { color: var(--fleet-ink); }
+
+body.dark .fleet-signout { color: #b8c4ff; }
 body.dark .text-primary,
 body.dark a:not(.btn) { color: #b8c4ff; }
+body.dark .fleet-sidebar .navbar-brand { color: var(--fleet-ink); }
+body.dark .fleet-sidebar .nav-link:not(.active) { color: var(--fleet-muted); }
 body.dark .fleet-sidebar .nav-link.active { color: #fff; }
+body.dark .fleet-account-avatar { color: #d6ddff; background: #2b3550; }
 body.dark .btn.btn-outline-primary {
     --bs-btn-color: #b8c4ff;
     --bs-btn-border-color: #b8c4ff;
@@ -58,103 +191,6 @@ body.dark .btn.btn-outline-primary {
 .dark .btn.btn-outline-primary:active { color: #151a23; background: #b8c4ff; border-color: #b8c4ff; }
 .dark .btn.btn-link { color: #b8c4ff; }
 body.dark .fleet-chart__bar { background: #b8c4ff; }
-
-.fleet-sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 1040;
-    width: var(--fleet-sidebar-width);
-    overflow-y: auto;
-    transition: transform .2s ease;
-}
-
-.fleet-sidebar .sidebar-header {
-    min-height: 72px;
-}
-
-.fleet-sidebar .nav-link {
-    display: flex;
-    min-height: 44px;
-    align-items: center;
-    padding: .65rem 1rem;
-}
-
-.min-action {
-    min-width: 44px;
-    min-height: 44px;
-}
-
-.form-control,
-.form-select {
-    min-height: 44px;
-    --bs-border-color: #697689;
-    border-color: #697689;
-}
-
-body.dark .form-control,
-body.dark .form-select { --bs-border-color: #9ca7bb; border-color: #9ca7bb; }
-
-.fleet-brand {
-    display: block;
-    color: inherit;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.fleet-sidebar .navbar-brand.fleet-brand { display: block; }
-
-.fleet-brand small {
-    display: block;
-    color: var(--fleet-muted);
-    font-size: .72rem;
-    font-weight: 400;
-}
-
-.fleet-main {
-    min-width: 0;
-    min-height: 100vh;
-    margin-left: var(--fleet-sidebar-width);
-}
-
-.fleet-topbar {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    display: flex;
-    min-height: 72px;
-    align-items: center;
-    gap: 1rem;
-    padding: .75rem clamp(1rem, 3vw, 2rem);
-    background: var(--fleet-surface);
-    border-bottom: 1px solid var(--fleet-line);
-}
-
-.fleet-topbar h1 {
-    margin: 0;
-    color: var(--fleet-ink);
-    font-size: 1.2rem;
-}
-
-.fleet-demo-label {
-    flex: 0 0 auto;
-    padding: .35rem .55rem;
-    border: 1px solid var(--fleet-line);
-    border-radius: .25rem;
-    color: var(--fleet-muted);
-    font-size: .75rem;
-}
-
-.fleet-page {
-    padding: clamp(1rem, 2.5vw, 2rem);
-}
-
-.fleet-card {
-    background: var(--fleet-surface);
-}
-
-.fleet-muted {
-    color: var(--fleet-muted);
-}
 
 .fleet-status {
     display: inline-flex;
@@ -208,14 +244,38 @@ body.dark .form-select { --bs-border-color: #9ca7bb; border-color: #9ca7bb; }
     display: grid;
     min-height: 100vh;
     place-items: center;
-    padding: 1rem;
+    padding: clamp(1rem, 3vw, 2rem);
 }
 
-.fleet-login__card {
-    width: min(100%, 440px);
+.fleet-login__layout {
+    display: grid;
+    width: min(100%, 68rem);
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, .9fr);
+    overflow: hidden;
+    border: 1px solid var(--fleet-line);
+    border-radius: .75rem;
+    background: var(--fleet-surface);
+    box-shadow: 0 1rem 2.5rem rgb(12 17 46 / 12%);
 }
 
-.fleet-login-theme {
+.fleet-login__brand {
+    display: flex;
+    min-height: 34rem;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(2rem, 6vw, 5rem);
+    color: #fff;
+    background: #0c112e;
+}
+
+.fleet-login__brand h1 { color: #fff; font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; }
+.fleet-login__brand p { max-width: 25rem; color: #e8ebf3; font-size: 1.05rem; }
+.fleet-login__brand-label { color: #b8c4ff; font-size: .85rem; }
+.fleet-login__form.card { align-self: center; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.fleet-login__form .card-body { width: min(100%, 30rem); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem); }
+.fleet-login__form h2 { color: var(--fleet-ink); }
+
+.fleet-login__theme {
     position: fixed;
     top: 1rem;
     right: 1rem;
@@ -290,9 +350,9 @@ body.dark .fleet-login :focus-visible {
 }
 
 @media (max-width: 991.98px) {
-    .fleet-sidebar { transform: translateX(-100%); }
-    .fleet-sidebar.is-open { transform: translateX(0); }
-    .fleet-main { margin-left: 0; }
+    .fleet-sidebar { transform: translateX(-100%); visibility: hidden; }
+    .fleet-sidebar.is-open { transform: translateX(0); visibility: visible; }
+    .main-content { margin-left: 0; }
     .fleet-backdrop {
         position: fixed;
         inset: 0;
@@ -301,12 +361,22 @@ body.dark .fleet-login :focus-visible {
     }
 }
 
+@media (max-width: 767.98px) {
+    .fleet-login__layout { width: min(100%, 30rem); grid-template-columns: minmax(0, 1fr); }
+    .fleet-login__brand { min-height: auto; gap: 2rem; padding: 1.5rem; }
+    .fleet-login__brand h1 { font-size: 2rem; }
+    .fleet-login__brand p { margin-bottom: 0; }
+    .fleet-login__form.card { align-self: stretch; }
+}
+
 @media (max-width: 575.98px) {
-    .fleet-page { padding: 1rem; }
+    .content-inner.fleet-page { padding: 1rem; }
     .fleet-chart { gap: .25rem; }
     .fleet-chart__month span:last-child { font-size: .65rem; }
-    .fleet-topbar { min-height: 60px; }
-    .fleet-topbar h1 { display: none; }
+    .main-content .fleet-navbar { min-height: 60px; margin: .5rem .5rem 0; }
+    .fleet-navbar .navbar-inner { padding-right: .75rem; padding-left: .75rem; }
+    .fleet-page-heading { flex-direction: column; align-items: stretch; gap: .75rem; }
+    .fleet-page-heading .btn { align-self: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

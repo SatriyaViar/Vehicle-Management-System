@@ -1,9 +1,11 @@
 <template>
     <div>
-        <div class="mb-4">
-            <p class="fleet-muted mb-1">Pemesanan kendaraan</p>
-            <h2 class="h4 mb-0">{{ editing ? 'Ubah pemesanan' : 'Pesan kendaraan' }}</h2>
-        </div>
+        <header class="fleet-page-heading mb-4">
+            <div>
+                <p class="fleet-muted mb-1">Pemesanan kendaraan</p>
+                <h1>{{ editing ? 'Ubah pemesanan' : 'Pesan kendaraan' }}</h1>
+            </div>
+        </header>
 
         <p v-if="loading" role="status">Memuat data form…</p>
         <div v-else-if="loadError" class="alert alert-danger" role="alert">
