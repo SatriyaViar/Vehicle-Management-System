@@ -14,64 +14,64 @@
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="requester">Nama pegawai pemakai</label>
-                        <input id="requester" v-model.trim="form.requester_name" class="form-control" maxlength="120" required :aria-invalid="Boolean(errors.requester_name)">
-                        <p v-if="errors.requester_name" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.requester_name }}</p>
+                        <input id="requester" v-model.trim="form.requester_name" class="form-control" maxlength="120" required :aria-invalid="Boolean(errors.requester_name)" :aria-describedby="errors.requester_name ? 'requester-error' : undefined">
+                        <p v-if="errors.requester_name" id="requester-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.requester_name }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="destination">Tujuan / lokasi</label>
-                        <input id="destination" v-model.trim="form.destination" class="form-control" maxlength="255" required :aria-invalid="Boolean(errors.destination)">
-                        <p v-if="errors.destination" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.destination }}</p>
+                        <input id="destination" v-model.trim="form.destination" class="form-control" maxlength="255" required :aria-invalid="Boolean(errors.destination)" :aria-describedby="errors.destination ? 'destination-error' : undefined">
+                        <p v-if="errors.destination" id="destination-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.destination }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="vehicle">Kendaraan</label>
-                        <select id="vehicle" v-model="form.vehicle_id" class="form-select" required :aria-invalid="Boolean(errors.vehicle_id)">
+                        <select id="vehicle" v-model="form.vehicle_id" class="form-select" required :aria-invalid="Boolean(errors.vehicle_id)" :aria-describedby="errors.vehicle_id ? 'vehicle-error' : undefined">
                             <option value="" disabled>Pilih kendaraan</option>
                             <option v-for="vehicle in options.vehicles" :key="vehicle.id" :value="vehicle.id">{{ vehicle.plate_number }} · {{ vehicle.type === 'goods' ? 'Angkutan barang' : 'Angkutan orang' }} · {{ vehicle.ownership === 'rental' ? 'Sewa' : 'Milik perusahaan' }}</option>
                         </select>
-                        <p v-if="errors.vehicle_id" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.vehicle_id }}</p>
+                        <p v-if="errors.vehicle_id" id="vehicle-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.vehicle_id }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="driver">Driver</label>
-                        <select id="driver" v-model="form.driver_id" class="form-select" required :aria-invalid="Boolean(errors.driver_id)">
+                        <select id="driver" v-model="form.driver_id" class="form-select" required :aria-invalid="Boolean(errors.driver_id)" :aria-describedby="errors.driver_id ? 'driver-error' : undefined">
                             <option value="" disabled>Pilih driver</option>
                             <option v-for="driver in options.drivers" :key="driver.id" :value="driver.id">{{ driver.name }}</option>
                         </select>
-                        <p v-if="errors.driver_id" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.driver_id }}</p>
+                        <p v-if="errors.driver_id" id="driver-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.driver_id }}</p>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="purpose">Keperluan perjalanan</label>
-                        <textarea id="purpose" v-model.trim="form.purpose" class="form-control" rows="3" required :aria-invalid="Boolean(errors.purpose)"></textarea>
-                        <p v-if="errors.purpose" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.purpose }}</p>
+                        <textarea id="purpose" v-model.trim="form.purpose" class="form-control" rows="3" required :aria-invalid="Boolean(errors.purpose)" :aria-describedby="errors.purpose ? 'purpose-error' : undefined"></textarea>
+                        <p v-if="errors.purpose" id="purpose-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.purpose }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="start_at">Mulai (WIB)</label>
-                        <input id="start_at" v-model="form.start_at" class="form-control" type="datetime-local" required :aria-invalid="Boolean(errors.start_at)">
-                        <p v-if="errors.start_at" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.start_at }}</p>
+                        <input id="start_at" v-model="form.start_at" class="form-control" type="datetime-local" required :aria-invalid="Boolean(errors.start_at)" :aria-describedby="errors.start_at ? 'start-at-error' : undefined">
+                        <p v-if="errors.start_at" id="start-at-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.start_at }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="end_at">Selesai (WIB)</label>
-                        <input id="end_at" v-model="form.end_at" class="form-control" type="datetime-local" required :aria-invalid="Boolean(errors.end_at)">
-                        <p v-if="errors.end_at" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.end_at }}</p>
+                        <input id="end_at" v-model="form.end_at" class="form-control" type="datetime-local" required :aria-invalid="Boolean(errors.end_at)" :aria-describedby="errors.end_at ? 'end-at-error' : undefined">
+                        <p v-if="errors.end_at" id="end-at-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.end_at }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="approver1">Penyetuju level 1</label>
-                        <select id="approver1" v-model="form.approver_1_id" class="form-select" required :aria-invalid="Boolean(errors.approver_1_id)">
+                        <select id="approver1" v-model="form.approver_1_id" class="form-select" required :aria-invalid="Boolean(errors.approver_1_id)" :aria-describedby="errors.approver_1_id ? 'approver1-error' : undefined">
                             <option value="" disabled>Pilih penyetuju</option>
                             <option v-for="approver in options.approvers" :key="approver.id" :value="approver.id">{{ approver.name }}</option>
                         </select>
-                        <p v-if="errors.approver_1_id" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.approver_1_id }}</p>
+                        <p v-if="errors.approver_1_id" id="approver1-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.approver_1_id }}</p>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="approver2">Penyetuju level 2</label>
-                        <select id="approver2" v-model="form.approver_2_id" class="form-select" required :aria-invalid="Boolean(errors.approver_2_id)">
+                        <select id="approver2" v-model="form.approver_2_id" class="form-select" required :aria-invalid="Boolean(errors.approver_2_id)" :aria-describedby="errors.approver_2_id ? 'approver2-error' : undefined">
                             <option value="" disabled>Pilih penyetuju</option>
                             <option v-for="approver in options.approvers" :key="approver.id" :value="approver.id">{{ approver.name }}</option>
                         </select>
-                        <p v-if="errors.approver_2_id" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.approver_2_id }}</p>
+                        <p v-if="errors.approver_2_id" id="approver2-error" class="fleet-error small mt-1 mb-0" role="alert">{{ errors.approver_2_id }}</p>
                     </div>
                 </div>
 
-                <p v-if="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ error }}</p>
+                <p v-if="error" id="booking-error-summary" ref="errorSummary" class="alert alert-danger mt-4 mb-0" role="alert" tabindex="-1">{{ error }}</p>
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
                     <router-link class="btn btn-outline-secondary min-action" to="/bookings">Batal</router-link>
                     <button class="btn btn-primary min-action" type="submit" :disabled="saving" :aria-busy="saving">{{ saving ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Buat pemesanan' }}</button>
@@ -85,6 +85,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../bootstrap';
+import { notice } from '../alerts';
 
 const route = useRoute();
 const router = useRouter();
@@ -93,6 +94,7 @@ const loading = ref(true);
 const saving = ref(false);
 const loadError = ref('');
 const error = ref('');
+const errorSummary = ref(null);
 const errors = reactive({});
 const options = reactive({ vehicles: [], drivers: [], approvers: [] });
 const form = reactive({
@@ -130,6 +132,7 @@ async function load() {
         }
     } catch {
         loadError.value = 'Data form tidak dapat dimuat.';
+        void notice(loadError.value, 'Form pemesanan tidak tersedia');
     } finally {
         loading.value = false;
     }
@@ -145,11 +148,14 @@ async function submit() {
             ? await api.patch(`/api/bookings/${route.params.id}`, form)
             : await api.post('/api/bookings', form);
         await router.push(`/bookings/${response.data.data.id}`);
+        await notice(editing.value ? 'Perubahan pemesanan tersimpan.' : 'Pemesanan berhasil dibuat.', 'Pemesanan disimpan');
     } catch (requestError) {
         Object.assign(errors, Object.fromEntries(Object.entries(requestError.response?.data?.errors ?? {}).map(([key, messages]) => [key, messages[0]])));
         error.value = requestError.response?.status === 409
             ? requestError.response.data.message
             : requestError.response?.status === 422 ? 'Periksa kembali data pemesanan.' : 'Pemesanan tidak dapat disimpan.';
+        await notice(error.value, 'Pemesanan tidak tersimpan');
+        errorSummary.value?.focus();
     } finally {
         saving.value = false;
     }

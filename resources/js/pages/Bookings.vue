@@ -45,7 +45,7 @@
                             <td>{{ approvalSummary(booking) }}</td>
                             <td><span class="fleet-status" :class="`fleet-status--${booking.status}`">{{ statusLabel(booking.status) }}</span></td>
                             <td class="text-nowrap">
-                                <router-link class="btn btn-sm btn-outline-primary min-action me-1" :to="`/bookings/${booking.id}`">Detail</router-link>
+                                <router-link class="btn btn-sm btn-outline-primary min-action me-1" :to="{ path: '/bookings', query: withDetail(route.query, booking.id) }" @click="rememberDetailTrigger">Detail</router-link>
                                 <router-link v-if="canEdit(booking)" class="btn btn-sm btn-outline-secondary min-action" :to="`/bookings/${booking.id}/edit`">Edit</router-link>
                             </td>
                         </tr>
@@ -60,12 +60,14 @@
                     </div>
                     <p class="fleet-muted small mb-2">{{ formatSchedule(booking) }} WIB · {{ approvalSummary(booking) }}</p>
                     <div class="d-flex gap-2">
-                        <router-link class="btn btn-sm btn-outline-primary min-action" :to="`/bookings/${booking.id}`">Detail</router-link>
+                        <router-link class="btn btn-sm btn-outline-primary min-action" :to="{ path: '/bookings', query: withDetail(route.query, booking.id) }" @click="rememberDetailTrigger">Detail</router-link>
                         <router-link v-if="canEdit(booking)" class="btn btn-sm btn-outline-secondary min-action" :to="`/bookings/${booking.id}/edit`">Edit</router-link>
                     </div>
                 </article>
             </div>
         </section>
+
+        <BookingDetail v-if="detailId" :id="detailId" :return-focus="detailTrigger" @dismiss="closeDetail" @changed="load" />
     </div>
 </template>
 
@@ -75,7 +77,9 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../bootstrap';
 import { auth } from '../auth';
 import BookingFilters from '../components/BookingFilters.vue';
-import { readBookingFilters, toBookingQuery } from '../booking-filters';
+import BookingDetail from './BookingDetail.vue';
+import { readBookingFilters, toBookingQuery, withDetail, withoutDetail } from '../booking-filters';
+import { notice } from '../alerts';
 
 const route = useRoute();
 const router = useRouter();
@@ -87,6 +91,8 @@ const optionsLoading = ref(true);
 const optionsError = ref('');
 const appliedFilters = computed(() => readBookingFilters(route.query));
 const hasFilters = computed(() => Object.keys(appliedFilters.value).length > 0);
+const detailId = computed(() => typeof route.query.detail === 'string' ? route.query.detail : '');
+const detailTrigger = ref(null);
 let loadRequest = 0;
 
 async function load() {
@@ -98,7 +104,10 @@ async function load() {
         const response = await api.get('/api/bookings', { params: appliedFilters.value });
         if (request === loadRequest) bookings.value = response.data.data;
     } catch {
-        if (request === loadRequest) error.value = 'Daftar pemesanan tidak dapat dimuat.';
+        if (request === loadRequest) {
+            error.value = 'Daftar pemesanan tidak dapat dimuat.';
+            void notice(error.value, 'Daftar pemesanan tidak tersedia');
+        }
     } finally {
         if (request === loadRequest) loading.value = false;
     }
@@ -111,6 +120,7 @@ async function loadFilterOptions() {
         filterOptions.value = await api.get('/api/booking-filter-options').then(({ data }) => data);
     } catch {
         optionsError.value = 'Pilihan kendaraan, driver, dan penyetuju tidak dapat dimuat.';
+        void notice(optionsError.value, 'Pilihan filter tidak tersedia');
     } finally {
         optionsLoading.value = false;
     }
@@ -133,6 +143,14 @@ async function resetFilters() {
     await router.push({ query: {} });
 }
 
+async function closeDetail() {
+    await router.replace({ path: route.path, query: withoutDetail(route.query) });
+}
+
+function rememberDetailTrigger(event) {
+    detailTrigger.value = event.currentTarget;
+}
+
 function formatSchedule(booking) {
     const start = new Date(booking.start_at);
     const end = new Date(booking.end_at);
@@ -153,6 +171,7 @@ function statusLabel(status) {
 }
 
 watch(() => JSON.stringify(appliedFilters.value), load, { immediate: true });
+watch(() => route.query.detail, (id) => { if (!id) detailTrigger.value = null; });
 onMounted(loadFilterOptions);
 </script>
 

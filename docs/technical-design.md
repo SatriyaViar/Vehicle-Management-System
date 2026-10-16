@@ -147,7 +147,7 @@ Indeks tambahan: `bookings(vehicle_id,start_at,end_at)`, `bookings(driver_id,sta
 
 ## 7. Kontrak HTTP minimum
 
-Semua route didefinisikan di `routes/web.php`. Login memakai kredensial email/password dan session Laravel, lalu regenerasi session; logout menghapus autentikasi, menginvalidasi session, dan meregenerasi token CSRF. JSON request menyertakan `Accept: application/json`, session cookie, dan token CSRF untuk mutasi. Admin diarahkan ke `/dashboard`; approver ke `/bookings`.
+Semua route didefinisikan di `routes/web.php`. Login memakai kredensial email/password dan session Laravel, lalu regenerasi session. Respons login memberikan token CSRF dari session baru agar Vue memperbarui header Axios sebelum mutasi pertama. Logout menghapus autentikasi, menginvalidasi session, dan memberikan token CSRF baru. JSON request menyertakan `Accept: application/json`, session cookie, dan token CSRF untuk mutasi. Admin diarahkan ke `/dashboard`; approver ke `/bookings`.
 
 | Metode dan path | Akses | Kegunaan |
 |---|---|---|
@@ -155,18 +155,21 @@ Semua route didefinisikan di `routes/web.php`. Login memakai kredensial email/pa
 | `POST /logout` | Login | Logout session |
 | `GET /api/me` | Login | Identitas dan role pengguna |
 | `GET /api/booking-options` | Admin | Kendaraan, driver, dan akun approver untuk form |
-| `GET /api/bookings` | Login | Daftar; admin melihat semua, approver hanya yang ditujukan kepadanya; filter `from`, `to`, `status` berdasarkan `created_at` WIB |
+| `GET /api/booking-filter-options` | Login | Daftar id dan label kendaraan, driver, serta approver untuk filter |
+| `GET /api/bookings` | Login | Daftar; admin melihat semua, approver hanya yang ditujukan kepadanya; filter `search`, `status`, `from`, `to`, `vehicle_id`, `driver_id`, `approver_id` |
 | `GET /api/bookings/{booking}` | Admin/approver terkait | Detail, dua approval, log |
 | `POST /api/bookings` | Admin | Buat booking, dua approval, dan log |
 | `PATCH /api/bookings/{booking}` | Admin | Edit selama L1 `pending`, cek ulang konflik, log update |
 | `POST /api/bookings/{booking}/decision` | Approver terkait | Body `{ "decision": "approve" }` atau `{ "decision": "reject" }`; level diambil dari akun login |
 | `POST /api/bookings/{booking}/complete` | Admin | Tandai selesai jika `approved` dan waktu server `>= start_at` |
 | `GET /api/dashboard` | Admin | Total bookings, pending, approved, completed trips, grafik bulanan `completed_at` WIB |
-| `GET /api/reports/bookings/export` | Admin | File `.xlsx` dari filter `from`, `to`, `status` yang sama dengan daftar booking |
+| `GET /api/reports/bookings/export` | Admin | File `.xlsx` dari semua filter daftar booking yang sama |
 
 `201` untuk create; `200` untuk update/decision/complete dan data; `401` untuk JSON tanpa login; `403` jika tidak berhak; `419` untuk CSRF gagal; `422` untuk bentuk/input invalid dengan `errors` per kolom; `409` untuk jadwal bentrok atau state bisnis yang tidak memungkinkan. Respons berhasil dapat berisi `{ "message": "...", "data": {...} }` tanpa envelope tambahan. Ekspor merespons file `.xlsx`, bukan JSON. `decision`, `approver_id`, dan `level` dari payload tidak boleh dipakai sebagai sumber otorisasi; hanya `decision` yang diterima pada endpoint keputusan.
 
-Ekspor memakai filter yang sama dengan daftar admin. Kolomnya: kode booking, pegawai pemakai, kendaraan, driver, tujuan, jadwal, tanggal pembuatan WIB, approver level 1 dan 2 beserta keputusannya, serta status booking. Route UI Vue selain `/api/*` harus tetap membuka halaman awal saat browser di-refresh langsung pada URL detail atau laporan.
+Filter teks mencari kode, nama pemakai, atau tujuan tanpa membedakan kapital; `%` dan `_` dicari sebagai karakter literal. Filter kendaraan, driver, dan approver dipadukan dengan status dan rentang tanggal sebagai kondisi AND. Approver tetap dibatasi pada booking yang ditugaskan kepadanya, sekalipun parameter `approver_id` menunjuk pengguna lain. Daftar dan laporan menyimpan filter aktif di query URL. Periode `from`/`to` tetap merujuk `created_at` WIB dengan awal inklusif dan akhir eksklusif.
+
+Ekspor memakai ketujuh filter yang sama dengan daftar admin. Kolomnya: kode booking, pegawai pemakai, kendaraan, driver, tujuan, jadwal, tanggal pembuatan WIB, approver level 1 dan 2 beserta keputusannya, serta status booking. Route UI Vue selain `/api/*` harus tetap membuka halaman awal saat browser di-refresh langsung pada URL detail atau laporan.
 
 ## 8. UI dan navigasi
 
@@ -174,17 +177,18 @@ Ekspor memakai filter yang sama dengan daftar admin. Kolomnya: kode booking, peg
 |---|---|---|
 | `/login` | Guest | Form login dan pesan kesalahan |
 | `/dashboard` | Admin | Empat KPI: total bookings, pending, approved, completed trips; satu grafik pemakaian bulanan dengan keterangan "completed trips (WIB)" |
-| `/bookings` | Admin, approver | Daftar kode, pegawai pemakai, kendaraan, driver, jadwal, approval, status, aksi. Approver hanya melihat booking yang menunjuk dirinya, termasuk yang belum gilirannya |
+| `/bookings` | Admin, approver | Filter kata kunci, status, tanggal dibuat WIB, kendaraan, driver, penyetuju, lalu daftar kode, pemakai, jadwal, approval, status, dan aksi. Approver hanya melihat booking yang menunjuk dirinya |
+| `/bookings?detail={id}` | Admin, approver terkait | Dialog detail, approval, riwayat, dan aksi yang sesuai peran; query filter lain tetap disimpan |
 | `/bookings/create`, `/bookings/:id/edit` | Admin | Satu jenis form buat/edit; edit hanya saat L1 `pending`; input jadwal dilabeli WIB |
-| `/bookings/:id` | Admin, approver terkait | Ringkasan pemesanan, dua tahap approval, log, tombol keputusan saat giliran, tombol complete untuk admin jika waktu memadai |
-| `/reports` | Admin | Filter tanggal awal/akhir dan status; tabel hasil serta ekspor; keterangan bahwa periode berdasarkan tanggal pembuatan booking WIB |
+| `/bookings/:id` | Admin, approver terkait | Deep link lama yang dialihkan ke `/bookings?detail={id}` |
+| `/reports` | Admin | Filter bersama dengan daftar, tabel hasil, dialog detail, ekspor yang memakai filter aktif, dan keterangan periode tanggal pembuatan WIB |
 
-Sidebar admin: Dashboard, Bookings, Reports, Logout. Sidebar approver: Bookings, Logout. Detail menampung riwayat approval dan log tanpa halaman tambahan. Tampilan data memiliki keadaan loading, kosong, dan error; validasi field dan pesan konflik jelas; tabel dapat dipakai di layar sempit, navigasi dapat dijalankan dengan keyboard, fokus terlihat, dan tombol tidak aktif tidak disamarkan sebagai tindakan yang berhasil. Vue dapat menyembunyikan complete sebelum `start_at`, tetapi Laravel tetap memutuskan dengan jam server.
+Sidebar admin: Dashboard, Bookings, Reports, Logout. Sidebar approver: Bookings, Logout. Detail menampung riwayat approval dan log tanpa halaman tambahan; Edit tetap membuka form penuh. Query URL mempertahankan dialog saat refresh; Back menutup dialog dan mengembalikan daftar dengan filter sebelumnya. Dialog detail dan alert memakai `<dialog>` native, fokus awal terlihat, Escape membatalkan konfirmasi, dan konfirmasi tidak mengirim request jika dibatalkan. Alert berdiri di atas backdrop solid dengan bayangan ringan agar terpisah dari halaman; dialog detail membatasi tinggi dan menggulir isinya agar judul serta tombol tutup tetap mudah dicapai. Feedback request menggunakan alert dialog global; state loading, empty, retry, dan validasi per-field tetap tampil dekat konten terkait. Border input diperkuat pada tema terang dan gelap agar batas kontrol tetap terlihat. Tabel dan dialog dapat dipakai dengan keyboard dan di layar sempit. Vue dapat menyembunyikan complete sebelum `start_at`, tetapi Laravel tetap memutuskan dengan jam server.
 
 ## 9. Data demo, pengujian, dan serah terima
 
 Seeder menyediakan delapan lokasi, kendaraan `passenger`/`goods` dan `company`/`rental`, driver, satu admin, serta minimal dua approver. Sediakan booking dalam beberapa tahap dan setidaknya satu booking `completed` pada bulan berjalan WIB supaya grafik demo menunjukkan hasil dari data sungguhan. Kredensial demo baru dicatat dalam README setelah akun seeder dan passwordnya benar-benar dibuat.
 
-Feature tests Laravel memeriksa: login/CSRF/hak akses; create atomik dengan dua approval; bentrok kendaraan dan driver termasuk pending/completed, rejected, serta slot bersebelahan; edit sebelum dan sesudah keputusan L1; urutan dan otorisasi approval; reject di kedua level; konflik saat validasi terakhir L2; complete sebelum/tepat setelah `start_at` dan sebelum `end_at`; log untuk enam event; dashboard pada batas bulan WIB; laporan dengan batas periode half-open dan isi berkas `.xlsx`. Uji manual mencakup login per peran, alur end-to-end, UI responsif, empty/loading/error state, serta unduhan Excel.
+Feature tests Laravel memeriksa: login/CSRF termasuk token baru setelah login; hak akses; create atomik dengan dua approval; bentrok kendaraan dan driver; filter tujuh parameter dan ekspor dengan hasil sama; approval berurutan, reject, konflik L2, completion, log, dashboard dan batas periode WIB. Tes `node:test` memeriksa query filter dan antrian dialog. Uji browser mencakup filter URL, refresh/Back, retry, detail modal dari daftar/laporan, konfirmasi Escape, validasi form, kegagalan unduh, alur L1/L2/reject/complete, tema, fokus, dan mobile.
 
 README akhir memuat deskripsi proyek, stack, versi PHP/PostgreSQL/Node/framework yang **terverifikasi dari lingkungan implementasi**, prasyarat Docker Compose, penyiapan `.env` lokal tanpa kredensial rahasia di repo, perintah build/jalankan, migration/seeding, perintah tes pada database terpisah, akun demo, serta langkah menggunakan fitur. Dokumen ini menyatakan BBM dan servis sebagai pengembangan berikutnya, bukan fitur yang sudah ada.

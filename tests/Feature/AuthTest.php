@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -39,5 +40,22 @@ class AuthTest extends TestCase
         $this->postJson('/login', ['email' => $user->email, 'password' => 'secret123'])->assertOk();
 
         $this->postJson('/logout')->assertOk()->assertJsonStructure(['csrf_token']);
+    }
+
+    public function test_login_returns_the_rotated_csrf_token_for_the_next_mutation(): void
+    {
+        $this->app->instance('env', 'local');
+        $user = User::create(['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'secret123', 'role' => 'admin']);
+        $guestToken = Str::random(40);
+
+        $login = $this->withSession(['_token' => $guestToken])
+            ->withHeader('X-CSRF-TOKEN', $guestToken)
+            ->postJson('/login', ['email' => $user->email, 'password' => 'secret123'])
+            ->assertOk();
+
+        $freshToken = $login->json('csrf_token');
+        $this->assertIsString($freshToken);
+        $this->assertNotSame($guestToken, $freshToken);
+        $this->withHeader('X-CSRF-TOKEN', $freshToken)->postJson('/api/bookings', [])->assertUnprocessable();
     }
 }

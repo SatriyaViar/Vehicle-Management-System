@@ -75,14 +75,19 @@ Lokasi, kendaraan, driver, pegawai pemakai, dan nama pada seeder adalah data con
 3. Login sebagai penyetuju level 2 dan setujui pemesanan. Admin sekarang dapat melihat booking berstatus disetujui.
 4. Setelah waktu mulai perjalanan, login sebagai admin dan pilih **Tandai perjalanan selesai**.
 5. Lihat dashboard. Grafik menghitung booking selesai menurut `completed_at` WIB. Halaman laporan memfilter tanggal pembuatan booking dan menyediakan unduhan Excel.
+6. Di daftar atau laporan, gunakan filter kode/nama pemakai/tujuan, status, rentang tanggal dibuat, kendaraan, driver, atau penyetuju. Filter tersimpan di URL; Reset pada daftar menampilkan semua data, sedangkan Reset laporan kembali ke bulan berjalan.
+7. Klik kode atau **Detail** untuk membuka dialog berisi rincian, approval, riwayat, dan aksi sesuai peran. URL dialog dapat dibuka atau di-refresh; Back menutupnya. Untuk membuat atau mengubah pemesanan, aplikasi tetap membuka form penuh.
 
 Admin boleh mengubah booking hanya selama level 1 belum memutuskan. Booking yang ditolak tidak menahan kendaraan atau driver. Booking selesai lebih awal tetap menahan slot sampai `end_at` yang direncanakan.
+Konfirmasi, hasil aksi, dan kegagalan request muncul sebagai dialog. Pesan validasi tiap kolom tetap ditampilkan di bawah input terkait.
 
 ## Tes
 
 Compose menyediakan database terpisah bernama `fleetops_test` untuk tes, bukan database demo:
 
 ```powershell
+node --test
+npm run build
 docker compose --profile test run --rm test php artisan test
 ```
 

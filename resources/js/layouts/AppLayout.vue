@@ -46,6 +46,7 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../bootstrap';
 import { auth } from '../auth';
 import { dark } from '../theme';
+import { notice } from '../alerts';
 
 const route = useRoute();
 const router = useRouter();
@@ -57,18 +58,18 @@ function toggleTheme() {
 }
 
 async function signOut() {
-    let csrfToken = '';
+    let csrfToken;
     try {
         csrfToken = (await api.post('/logout')).data.csrf_token;
-    } finally {
-        auth.user = null;
-        auth.ready = true;
-        if (csrfToken) {
-            api.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-            document.querySelector('meta[name="csrf-token"]').content = csrfToken;
-        }
-        await router.push('/login');
+    } catch {
+        await notice('Sesi tidak dapat diakhiri. Coba lagi.', 'Keluar gagal');
+        return;
     }
+    auth.user = null;
+    auth.ready = true;
+    api.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+    document.querySelector('meta[name="csrf-token"]').content = csrfToken;
+    await router.push('/login');
 }
 
 function closeOnEscape(event) {

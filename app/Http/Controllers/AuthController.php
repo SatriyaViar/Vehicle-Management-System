@@ -22,6 +22,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $request->user()->only('id', 'name', 'email', 'role'),
             'redirect' => $request->user()->role === 'admin' ? '/dashboard' : '/bookings',
+            'csrf_token' => csrf_token(),
         ]);
     }
 

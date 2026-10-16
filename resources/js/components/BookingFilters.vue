@@ -18,11 +18,11 @@
                 </div>
                 <div class="col-12 col-md-6 col-lg-4">
                     <label class="form-label" for="booking-from">Dibuat dari (WIB)</label>
-                    <input id="booking-from" v-model="draft.from" class="form-control" type="date" :max="draft.to || today" :aria-invalid="Boolean(validationError)">
+                    <input id="booking-from" v-model="draft.from" class="form-control" type="date" :max="draft.to || today" :aria-invalid="Boolean(validationError)" :aria-describedby="validationError ? 'booking-filter-error' : undefined">
                 </div>
                 <div class="col-12 col-md-6 col-lg-4">
                     <label class="form-label" for="booking-to">Dibuat sampai (WIB)</label>
-                    <input id="booking-to" v-model="draft.to" class="form-control" type="date" :min="draft.from" :max="today" :aria-invalid="Boolean(validationError)">
+                    <input id="booking-to" v-model="draft.to" class="form-control" type="date" :min="draft.from" :max="today" :aria-invalid="Boolean(validationError)" :aria-describedby="validationError ? 'booking-filter-error' : undefined">
                 </div>
                 <div class="col-12 col-md-6 col-lg-4">
                     <label class="form-label" for="booking-vehicle">Kendaraan</label>
@@ -52,7 +52,7 @@
                 {{ optionsError }}
                 <button class="btn btn-sm btn-outline-danger min-action ms-2" type="button" @click="emit('retry-options')">Coba lagi</button>
             </div>
-            <p v-if="validationError" class="fleet-error mt-3 mb-0" role="alert">{{ validationError }}</p>
+            <p v-if="validationError" id="booking-filter-error" class="fleet-error mt-3 mb-0" role="alert">{{ validationError }}</p>
 
             <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                 <button class="btn btn-outline-secondary min-action" type="button" :disabled="loading" @click="emit('reset')">Reset</button>
@@ -92,10 +92,12 @@ function apply() {
     validationError.value = '';
     if (Boolean(draft.value.from) !== Boolean(draft.value.to)) {
         validationError.value = 'Isi kedua tanggal atau kosongkan keduanya.';
+        document.querySelector(draft.value.from ? '#booking-to' : '#booking-from')?.focus();
         return;
     }
     if (draft.value.from && draft.value.from > draft.value.to) {
         validationError.value = 'Tanggal awal tidak boleh melewati tanggal akhir.';
+        document.querySelector('#booking-from')?.focus();
         return;
     }
     emit('apply', toBookingQuery(draft.value));

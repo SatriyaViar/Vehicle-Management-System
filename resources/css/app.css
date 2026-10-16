@@ -87,7 +87,12 @@ body.dark .fleet-chart__bar { background: #b8c4ff; }
 .form-control,
 .form-select {
     min-height: 44px;
+    --bs-border-color: #697689;
+    border-color: #697689;
 }
+
+body.dark .form-control,
+body.dark .form-select { --bs-border-color: #9ca7bb; border-color: #9ca7bb; }
 
 .fleet-brand {
     display: block;
@@ -219,6 +224,52 @@ body.dark .fleet-chart__bar { background: #b8c4ff; }
 .fleet-error {
     color: #8b2420;
 }
+
+.fleet-alert {
+    width: min(32rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(80dvh, 40rem);
+    overflow: auto;
+    padding: 0;
+    border: 1px solid var(--fleet-line);
+    border-radius: .5rem;
+    color: var(--fleet-ink);
+    background: var(--fleet-surface);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 25%);
+}
+
+.fleet-alert::backdrop { background: rgb(20 28 42 / 52%); }
+.fleet-alert__content { padding: clamp(1rem, 4vw, 1.5rem); }
+.fleet-alert__content p { overflow-wrap: anywhere; white-space: pre-wrap; }
+.fleet-alert :focus-visible { outline: 3px solid #233ba9; outline-offset: 2px; }
+body.dark .fleet-alert :focus-visible { outline-color: #b8c4ff; }
+
+.fleet-booking-dialog {
+    width: min(64rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+    padding: 0;
+    border: 1px solid var(--fleet-line);
+    border-radius: .5rem;
+    color: var(--fleet-ink);
+    background: var(--fleet-background);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 25%);
+}
+
+.fleet-booking-dialog::backdrop { background: rgb(20 28 42 / 52%); }
+.fleet-booking-dialog__content { padding: 1rem clamp(1rem, 3vw, 1.5rem) 1.5rem; }
+.fleet-booking-dialog__header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 calc(clamp(1rem, 3vw, 1.5rem) * -1) 1rem;
+    padding: 1rem clamp(1rem, 3vw, 1.5rem);
+    border-bottom: 1px solid var(--fleet-line);
+    background: var(--fleet-background);
+}
+.fleet-booking-dialog :focus-visible { outline: 3px solid #233ba9; outline-offset: 2px; }
+body.dark .fleet-booking-dialog :focus-visible { outline-color: #b8c4ff; }
 
 button,
 a,

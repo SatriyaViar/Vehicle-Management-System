@@ -46,6 +46,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import api from '../bootstrap';
+import { notice } from '../alerts';
 
 const summary = ref(null);
 const loading = ref(true);
@@ -71,6 +72,7 @@ async function load() {
         summary.value = (await api.get('/api/dashboard')).data;
     } catch {
         error.value = 'Ringkasan tidak dapat dimuat.';
+        void notice(error.value, 'Ringkasan tidak tersedia');
     } finally {
         loading.value = false;
     }

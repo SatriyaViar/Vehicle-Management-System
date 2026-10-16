@@ -14,7 +14,7 @@ const router = createRouter({
                 { path: 'bookings', name: 'bookings', component: () => import('../pages/Bookings.vue'), meta: { title: 'Pemesanan' } },
                 { path: 'bookings/create', name: 'booking-create', component: () => import('../pages/BookingForm.vue'), meta: { title: 'Pesan kendaraan', role: 'admin' } },
                 { path: 'bookings/:id/edit', name: 'booking-edit', component: () => import('../pages/BookingForm.vue'), meta: { title: 'Ubah pemesanan', role: 'admin' } },
-                { path: 'bookings/:id', name: 'booking-detail', component: () => import('../pages/BookingDetail.vue'), meta: { title: 'Detail pemesanan' } },
+                { path: 'bookings/:id', name: 'booking-detail', redirect: (to) => ({ path: '/bookings', query: { ...to.query, detail: to.params.id } }) },
                 { path: 'reports', name: 'reports', component: () => import('../pages/Reports.vue'), meta: { title: 'Laporan', role: 'admin' } },
             ],
         },
